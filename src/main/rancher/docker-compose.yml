@@ -1,0 +1,51 @@
+version: '2'
+services:
+  survey-db:
+    image: cassandra:3.10
+    stdin_open: true
+    volumes:
+    - /opt/librairy/survey/db/data:/var/lib/cassandra
+    cpuset: 0-1
+    ports:
+    - 9542:9042/tcp
+    command:
+    - bash
+    - -c
+    - if [ -z "$$$$(ls -A /var/lib/cassandra/)" ] ; then sleep 0; fi && /docker-entrypoint.sh cassandra -f
+    labels:
+      host: wiig
+      io.rancher.scheduler.affinity:host_label: host=wiig
+      io.rancher.container.pull_image: always
+    mem_limit: 2365587456
+    hostname: survey-db
+    environment:
+      JAVA_OPTS: -XX:+AlwaysPreTouch
+      MAX_HEAP_SIZE: 1024M
+      HEAP_NEWSIZE: 256M
+      CASSANDRA_CLUSTER_NAME: survey_cluster
+      CASSANDRA_SEEDS: survey-db
+    memswap_limit: 4731174912
+  survey-web:
+    image: librairy/survey-web:1.0
+    stdin_open: true
+    links:
+    - survey-api:survey-api
+    ports:
+    - 8585:80/tcp
+    labels:
+      host: wiig
+      io.rancher.scheduler.affinity:host_label: host=wiig
+      io.rancher.container.pull_image: always
+  survey-api:
+    image: librairy/survey-api:1.1
+    environment:
+      LIBRAIRY_SURVEY_DB_HOSTS: survey-db
+    stdin_open: true
+    links:
+    - survey-db:survey-db
+    ports:
+    - 8686:8080/tcp
+    labels:
+      host: wiig
+      io.rancher.scheduler.affinity:host_label: host=wiig
+      io.rancher.container.pull_image: always

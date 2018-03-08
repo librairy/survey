@@ -1,0 +1,36 @@
+version: '2'
+services:
+  survey-db:
+    container_name: survey-db
+    image: cassandra:3.10
+    hostname: survey-db
+    environment:
+      CASSANDRA_CLUSTER_NAME: survey_cluster
+      CASSANDRA_SEEDS: survey-db
+    stdin_open: true
+    volumes:
+    - /mnt/librairy/survey/db/data:/var/lib/cassandra
+    expose:
+    - 9042
+    command:
+    - bash
+    - -c
+    - if [ -z "$$$$(ls -A /var/lib/cassandra/)" ] ; then sleep 0; fi && /docker-entrypoint.sh cassandra -f
+    labels:
+      host: librairy-5
+      io.rancher.scheduler.affinity:host_label: host=librairy-5
+      io.rancher.container.pull_image: always
+  survey:
+    container_name: survey
+    image: librairy/survey:latest
+    environment:
+      LIBRAIRY_SURVEY_DB_HOSTS: survey-db
+    stdin_open: true
+    links:
+    - survey-db:survey-db
+    expose:
+    - 8080
+    labels:
+      host: librairy-5
+      io.rancher.scheduler.affinity:host_label: host=librairy-5
+      io.rancher.container.pull_image: always

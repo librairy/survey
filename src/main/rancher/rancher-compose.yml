@@ -1,0 +1,11 @@
+version: '2'
+services:
+  survey-db:
+    scale: 1
+    start_on_create: true
+  survey-web:
+    scale: 1
+    start_on_create: true
+  survey-api:
+    scale: 1
+    start_on_create: true
